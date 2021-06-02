@@ -1,0 +1,115 @@
+html {
+	box-sizing: border-box;
+	font-size: 10px;
+	background: #ffc600;
+}
+
+*,
+*:before,
+*:after {
+	box-sizing: inherit;
+}
+
+body {
+	padding: 0;
+	margin: 0;
+	font-family: 'Amatic SC', cursive;
+}
+
+h1 {
+	text-align: center;
+	font-size: 7rem;
+	line-height: 1;
+	margin-bottom: 0;
+}
+
+h2 {
+	text-align: center;
+	font-size: 5rem;
+	line-height: 1;
+	margin-bottom: 0;
+}
+
+.score {
+	background: #ffffff;
+	padding: 0 2rem;
+	line-height: 1;
+	border-radius: 1rem;
+}
+
+.game {
+	width: 630px;
+	height: 630px;
+	display: flex;
+	flex-wrap: wrap;
+	margin: 0 auto;
+}
+
+.hole {
+	top: 10%;
+	flex: 1 0 33.33%;
+	overflow: hidden;
+	position: relative;
+	z-index: 1;
+}
+
+.hole:after {
+	display: block;
+	background: url('Grass.svg') bottom center no-repeat;
+	background-size: contain;
+	content: '';
+	width: 100%;
+	height: 100%;
+	position: absolute;
+	bottom: -5px;
+	z-index: 2;
+}
+
+.mole {
+	background: url('mole.svg') bottom center no-repeat;
+	background-size: 60%;
+	position: absolute;
+	top: 0%;
+	width: 100%;
+	height: 100%;
+	transition: all 0.6s;
+}
+
+.finalResults {
+	top: 40%;
+	left: 40%;
+	position: absolute;
+	display: flex;
+	flex-wrap: wrap;
+	width: 400px;
+}
+
+.endP {
+	text-align: center;
+	font-size: 7rem;
+	line-height: 0;
+	margin-bottom: 0;
+	position: relative;
+}
+
+.inputForm {
+	font-size: 4rem;
+	position: absolute;
+	top: 10%;
+	left: 2%;
+	display: inline-block;
+	padding: 15px 10px;
+	line-height: 60%;
+}
+
+.newGame {
+	border: 3px solid green;
+	position: absolute;
+	top: 25%;
+	left: 45%;
+	width: 10%;
+	height: 30px;
+	display: inline-block;
+	text-align: center;
+	cursor: pointer;
+}

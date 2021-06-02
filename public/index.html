@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+	<title>Whack A Mole!</title>
+    <link href='https://fonts.googleapis.com/css?family=Amatic+SC:400,700' rel='stylesheet' type='text/css'>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <h1>Whack-a-mole!</h1>
+	<h2> <span class = "score">0</span> </h2>
+	
+	<form action="/action_page.php" class = "inputForm">
+		<label for="holes">Holes</label>
+		<input type="text" id='holes' name="holes"><br><br>
+		<label for="timeInSeconds">Time in seconds</label>
+		<input type="text" id='timeInSeconds' name="timeInSeconds"><br><br>
+	</form>
+	
+	<button id = 'newGame' class = "newGame">New Game!</button>
+
+	<div id = 'game' class = "game"></div>
+	<div id = 'finalResults' class = "finalResults"></div>
+
+    <script>
+		//HTML elements
+		const newGame = document.getElementById("newGame");
+		const scoreBoard = document.querySelector('.score');
+		const divGame = document.getElementById("game");
+		const finalResultsDiv = document.getElementById("finalResults");
+		const holesInput = document.getElementById("holes");
+		const timeInput = document.getElementById("timeInSeconds");
+
+		let playerId = null;
+		let gameTime = 30;
+		let maxHoles = 9;
+		let ws = new WebSocket("ws://localhost:9090")
+
+		let molesHit = 0;
+		let molesMissed = 0;
+		loadEndResults();
+		holesInput.value = maxHoles;
+		timeInput.value = gameTime;
+
+		//Events
+		newGame.addEventListener("click", e => {
+			maxHoles = parseInt(holesInput.value);
+			gameTime = parseInt(timeInput.value);
+			if (isNaN(maxHoles) || isNaN(gameTime) || maxHoles < 1 || gameTime < 5) {
+				maxHoles = 9;
+				gameTime = 30;
+				holesInput.value = maxHoles;
+				timeInput.value = gameTime;
+				alert("Please input only valid numbers");
+				return;
+			}
+			const payLoad = {
+				"method": "newGame",
+				"gameTime": gameTime,
+				"maxHoles": maxHoles,
+				"playerId": playerId
+			}
+			ws.send(JSON.stringify(payLoad));
+		})
+
+		ws.onmessage = message => {
+			//message.data
+			const response = JSON.parse(message.data);
+
+			//connect
+			if (response.method === "connect") {
+				playerId = response.playerId;
+				console.log("Player id Set successfully " + playerId)
+			}
+
+			//new game 
+			if (response.method === "newGame") {
+				console.log("Game created!")
+				scoreBoard.textContent = response.game.score;
+				molesHit = response.game.molesHit;
+				molesMissed = response.game.molesMissed;
+				removeHoles();
+				while (finalResultsDiv.firstChild)
+					finalResultsDiv.removeChild(finalResultsDiv.firstChild);
+				for (let i = 0; i < maxHoles; i++) {
+					const div = document.createElement("div");
+					div.id = "hole" + (i + 1);
+					div.tag = i;
+					div.classList.add("hole");
+					div.addEventListener("click", e => {
+
+						const payLoad = {
+							"method": "clickHole",
+							"playerId": playerId,
+							"holeId": div.tag //
+						}
+						ws.send(JSON.stringify(payLoad))
+					})
+					divGame.appendChild(div);
+				}
+				divGame.getElementsByClassName('hole')[response.game.moleInHoleId].appendChild(createMoleDiv());
+			}
+
+			if (response.method === "changeMole") {
+				divGame.getElementsByClassName('hole')[response.lastHoleId].removeChild(divGame.getElementsByClassName('hole')[response.lastHoleId].getElementsByClassName('mole')[0]);
+				scoreBoard.textContent = response.game.score;
+				molesHit = response.game.molesHit;
+				molesMissed = response.game.molesMissed;
+				divGame.getElementsByClassName('hole')[response.game.moleInHoleId].appendChild(createMoleDiv());
+			}
+
+			if (response.method === "missedMole") {
+				molesMissed += 1;
+				scoreBoard.textContent = response.score;
+			}
+
+			if (response.method === "gameEnded") {
+				divGame.getElementsByClassName('hole')[response.moleInHoleId].removeChild(divGame.getElementsByClassName('hole')[response.moleInHoleId].getElementsByClassName('mole')[0]);
+				scoreBoard.textContent = response.score;
+				molesHit = response.molesHit;
+				molesMissed = response.molesMissed;
+				removeHoles();
+				loadEndResults();
+			}
+
+		}
+
+		function loadEndResults() {
+			var par = document.createElement("p");
+			var node = document.createTextNode("The game has ended.");
+			par.appendChild(node);
+			par.classList.add("endP");
+			finalResultsDiv.appendChild(par);
+			par = document.createElement("p");
+			node = document.createTextNode("Moles hit: " + molesHit);
+			par.appendChild(node);
+			par.classList.add("endP");
+			finalResultsDiv.appendChild(par);
+			par = document.createElement("p");
+			node = document.createTextNode("Moles missed: " + molesMissed);
+			par.appendChild(node);
+			par.classList.add("endP");
+			finalResultsDiv.appendChild(par);
+			par = document.createElement("p");
+			node = document.createTextNode("Total score: " + scoreBoard.textContent);
+			par.appendChild(node);
+			par.classList.add("endP");
+			finalResultsDiv.appendChild(par);
+		}
+
+		function removeHoles() {
+			while (divGame.firstChild)
+				divGame.removeChild(divGame.firstChild);
+		}
+
+		function createMoleDiv() {
+			const div = document.createElement("div");
+			div.id = "mole"
+			div.classList.add("mole");
+			div.addEventListener("click", e => {
+				const payLoad = {
+					"method": "clickHole",
+					"playerId": playerId,
+					"holeId": response.game.moleInHoleId
+				}
+				ws.send(JSON.stringify(payLoad))
+			})
+			return div;
+		}
+    </script>
+</body>
+</html>
